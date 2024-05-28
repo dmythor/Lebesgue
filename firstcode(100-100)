@@ -1,0 +1,42 @@
+import numpy as np
+import random
+from scipy.spatial import ConvexHull
+
+def generate_random_points(n, x_max=100, y_max=100):
+    points = set()
+    while len(points) < n:
+        x = random.randint(0, x_max)
+        y = random.randint(0, y_max)
+        points.add((x, y))
+    return np.array(list(points))
+
+def filter_collinear_points(hull_points):
+    def is_collinear(p1, p2, p3):
+        return (p2[1] - p1[1]) * (p3[0] - p2[0]) == (p3[1] - p2[1]) * (p2[0] - p1[0])
+
+    filtered_points = []
+    n = len(hull_points)
+    for i in range(n):
+        p1 = hull_points[i]
+        p2 = hull_points[(i + 1) % n]
+        p3 = hull_points[(i + 2) % n]
+        if not is_collinear(p1, p2, p3):
+            filtered_points.append(p2)
+    
+    return filtered_points
+
+def find_convex_hull_vertices(points):
+    hull = ConvexHull(points)
+    hull_points = points[hull.vertices]
+    filtered_hull_points = filter_collinear_points(hull_points)
+    return len(filtered_hull_points)
+
+def main(n):
+    points = generate_random_points(n)
+    num_vertices = find_convex_hull_vertices(points)
+    return num_vertices
+
+# Наприклад, обираємо 50 точок:
+N = 50
+result = main(N)
+print(f'Кількість вершин багатокутника: {result}')
