@@ -1,0 +1,68 @@
+import numpy as np
+import random
+from scipy.spatial import ConvexHull
+import matplotlib.pyplot as plt
+
+def generate_random_points_in_circle(n, center=(500, 500), radius=500):
+    points = set()
+    while len(points) < n:
+        # Генеруємо випадкові полярні координати
+        r = radius * np.sqrt(random.random())
+        theta = random.uniform(0, 2 * np.pi)
+        # Конвертуємо полярні координати в декартові
+        x = center[0] + int(r * np.cos(theta))
+        y = center[1] + int(r * np.sin(theta))
+        points.add((x, y))
+    return np.array(list(points))
+
+def filter_collinear_points(hull_points):
+    def is_collinear(p1, p2, p3):
+        # Використовуємо детермінант для перевірки колінеарності
+        return (p2[0] - p1[0]) * (p3[1] - p1[1]) == (p2[1] - p1[1]) * (p3[0] - p1[0])
+
+    filtered_points = []
+    n = len(hull_points)
+    for i in range(n):
+        p1 = hull_points[i]
+        p2 = hull_points[(i + 1) % n]
+        p3 = hull_points[(i + 2) % n]
+        if not is_collinear(p1, p2, p3):
+            filtered_points.append(p2)
+    
+    return filtered_points
+
+def find_convex_hull_vertices(points):
+    hull = ConvexHull(points)
+    hull_points = points[hull.vertices]
+    filtered_hull_points = filter_collinear_points(hull_points)
+    return filtered_hull_points
+
+def plot_points_and_hull(points, hull_points):
+    plt.figure(figsize=(10, 10))
+    plt.plot(points[:, 0], points[:, 1], 'o', label='Points')
+    
+    hull_points = np.array(hull_points)
+    plt.plot(hull_points[:, 0], hull_points[:, 1], 'r-', label='Convex Hull')
+    plt.plot([hull_points[-1, 0], hull_points[0, 0]], [hull_points[-1, 1], hull_points[0, 1]], 'r-')
+    
+    circle = plt.Circle((500, 500), 500, color='blue', fill=False, linestyle='--', linewidth=1.5)
+    plt.gca().add_patch(circle)
+    
+    plt.xlabel('X coordinate')
+    plt.ylabel('Y coordinate')
+    plt.legend()
+    plt.xlim(0, 1000)
+    plt.ylim(0, 1000)
+    plt.gca().set_aspect('equal', adjustable='box')
+    plt.show()
+
+def main(n):
+    points = generate_random_points_in_circle(n)
+    hull_points = find_convex_hull_vertices(points)
+    plot_points_and_hull(points, hull_points)
+    return len(hull_points)
+
+# Наприклад, обираємо 50 точок:
+N = 50
+num_vertices = main(N)
+print(f'Кількість вершин багатокутника: {num_vertices}')
