@@ -1,0 +1,75 @@
+import numpy as np
+import random
+from scipy.spatial import ConvexHull
+from collections import Counter
+import openpyxl
+
+def generate_random_points_in_circle(n, center=(500, 500), radius=500):
+    points = set()
+    while len(points) < n:
+        # Генеруємо випадкові полярні координати
+        r = radius * np.sqrt(random.random())
+        theta = random.uniform(0, 2 * np.pi)
+        # Конвертуємо полярні координати в декартові
+        x = center[0] + int(r * np.cos(theta))
+        y = center[1] + int(r * np.sin(theta))
+        points.add((x, y))
+    return np.array(list(points))
+
+def filter_collinear_points(hull_points):
+    def is_collinear(p1, p2, p3):
+        return (p2[0] - p1[0]) * (p3[1] - p1[1]) == (p2[1] - p1[1]) * (p3[0] - p1[0])
+
+    filtered_points = []
+    n = len(hull_points)
+    for i in range(n):
+        p1 = hull_points[i]
+        p2 = hull_points[(i + 1) % n]
+        p3 = hull_points[(i + 2) % n]
+        if not is_collinear(p1, p2, p3):
+            filtered_points.append(p2)
+    
+    return filtered_points
+
+def find_convex_hull_vertices(points):
+    hull = ConvexHull(points)
+    hull_points = points[hull.vertices]
+    filtered_hull_points = filter_collinear_points(hull_points)
+    return len(filtered_hull_points)
+
+def run_experiment(max_n=1000, num_runs=1000):
+    results = []
+    for n in range(3, max_n + 1):
+        vertex_counts = []
+        for _ in range(num_runs):
+            points = generate_random_points_in_circle(n)
+            num_vertices = find_convex_hull_vertices(points)
+            vertex_counts.append(num_vertices)
+        # Найпоширеніша кількість вершин
+        most_common_vertex_count = Counter(vertex_counts).most_common(1)[0][0]
+        results.append((n, most_common_vertex_count))
+    return results
+
+def save_results_to_excel(results, filename="results.xlsx"):
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Vertex Count Results"
+    
+    # Записуємо заголовки
+    ws.append(["N", "Most Common Vertex Count"])
+    
+    # Записуємо дані
+    for result in results:
+        ws.append(result)
+    
+    # Зберігаємо файл
+    wb.save(filename)
+
+def main():
+    max_n = 1000
+    num_runs = 1000
+    results = run_experiment(max_n, num_runs)
+    save_results_to_excel(results)
+
+# Запуск основної функції
+main()
