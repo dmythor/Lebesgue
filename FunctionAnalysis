@@ -1,0 +1,44 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.optimize import curve_fit
+
+# Завантаження даних з файлу results.xlsx
+df = pd.read_excel('results.xlsx')
+
+# Візуалізація даних
+plt.figure(figsize=(10, 6))
+plt.plot(df['N'], df['Most Common Vertex Count'], label='Найпоширеніша кількість вершин')
+plt.xlabel('N')
+plt.ylabel('Найпоширеніша кількість вершин')
+plt.title('Залежність найпоширенішої кількості вершин від N')
+plt.legend()
+plt.grid(True)
+plt.show()
+
+# Підбір функції
+# Приклад для лінійної регресії
+def linear_func(x, a, b):
+    return a * x + b
+
+# Приклад для логарифмічної регресії
+def log_func(x, a, b):
+    return a * np.log(x) + b
+
+# Приклад для квадратної регресії
+def quad_func(x, a, b, c):
+    return a * x**2 + b * x + c
+
+# Вибір функції для підбору
+popt, pcov = curve_fit(log_func, df['N'], df['Most Common Vertex Count'])
+
+# Побудова графіка з підібраною функцією
+plt.figure(figsize=(10, 6))
+plt.plot(df['N'], df['Most Common Vertex Count'], label='Найпоширеніша кількість вершин')
+plt.plot(df['N'], log_func(df['N'], *popt), 'r-', label=f'Підбір: {popt[0]:.2f}*log(N) + {popt[1]:.2f}')
+plt.xlabel('N')
+plt.ylabel('Найпоширеніша кількість вершин')
+plt.title('Залежність найпоширенішої кількості вершин від N з підібраною функцією')
+plt.legend()
+plt.grid(True)
+plt.show()
